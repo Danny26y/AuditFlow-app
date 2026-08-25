@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Expo & Web
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Backend and python files (not needed for React Native mobile build)
+backend/
+scratch/
+*.db
+*.sqlite
+*.log
+__pycache__/
+*.pyc
+
+# Docs & Agent configurations
+.agents/
+.antigravity/
+AGENTS.md
+PROJECT_SPEC.md
+
+# Native and local files
+.kotlin/
+/ios
+/android
+.env*.local
+*.tsbuildinfo

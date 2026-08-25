@@ -39,3 +39,18 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.db
+*.sqlite3
+venv/
+.venv/
+
+# IDE / Scratch
+.antigravity/
+scratch/
+
+
