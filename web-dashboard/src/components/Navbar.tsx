@@ -9,6 +9,8 @@ import {
   CheckCircle2,
   AlertTriangle,
   X,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import {
   checkHealth,
@@ -18,6 +20,7 @@ import {
   DEFAULT_API_BASE_URL,
 } from '../services/api';
 import { SystemHealth } from '../types/dashboard';
+import { useTheme } from '../context/ThemeContext';
 
 interface NavbarProps {
   activeTab: 'OPERATIONS' | 'SECURITY';
@@ -32,6 +35,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onRefresh,
   isRefreshing = false,
 }) => {
+  const { theme, toggleTheme } = useTheme();
   const [health, setHealth] = useState<SystemHealth | null>(null);
   const [isHealthLoading, setIsHealthLoading] = useState<boolean>(true);
   const [isConfigOpen, setIsConfigOpen] = useState<boolean>(false);
@@ -97,7 +101,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const isOnline = health?.status === 'healthy';
 
   return (
-    <header className="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800/80 shadow-lg">
+    <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 shadow-md dark:shadow-lg transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Brand Logo & Title */}
@@ -107,25 +111,27 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <span className="text-lg font-bold tracking-tight text-white">AuditFlow</span>
-                <span className="px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded">
+                <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
+                  AuditFlow
+                </span>
+                <span className="px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded">
                   SEC ISA Core
                 </span>
               </div>
-              <p className="text-xs text-slate-400 font-normal hidden sm:block">
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-normal hidden sm:block">
                 Master Farmer Registry & Operational Monitoring
               </p>
             </div>
           </div>
 
           {/* Navigation Tabs */}
-          <nav className="flex items-center space-x-1 bg-slate-950/70 p-1 rounded-xl border border-slate-800">
+          <nav className="flex items-center space-x-1 bg-slate-100 dark:bg-slate-950/70 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
             <button
               onClick={() => onTabChange('OPERATIONS')}
               className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center space-x-2 ${
                 activeTab === 'OPERATIONS'
                   ? 'bg-emerald-500 text-slate-950 shadow-sm shadow-emerald-500/30'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800/50'
               }`}
             >
               <Activity className="h-3.5 w-3.5" />
@@ -136,7 +142,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center space-x-2 ${
                 activeTab === 'SECURITY'
                   ? 'bg-emerald-500 text-slate-950 shadow-sm shadow-emerald-500/30'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800/50'
               }`}
             >
               <ShieldCheck className="h-3.5 w-3.5" />
@@ -144,13 +150,13 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           </nav>
 
-          {/* Action Buttons & Status */}
-          <div className="flex items-center space-x-2.5">
+          {/* Action Buttons, Dark/Light Toggle & Status */}
+          <div className="flex items-center space-x-2">
             {/* System Status Pill */}
             <button
               onClick={() => setIsConfigOpen(true)}
               title="Click to configure backend URL"
-              className="flex items-center space-x-2 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-950/60 border border-slate-800 hover:border-slate-700 transition"
+              className="flex items-center space-x-2 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition"
             >
               <span className="relative flex h-2 w-2">
                 {isOnline ? (
@@ -162,7 +168,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
                 )}
               </span>
-              <span className={`text-xs ${isOnline ? 'text-emerald-400' : 'text-rose-400'}`}>
+              <span
+                className={`text-xs ${
+                  isOnline
+                    ? 'text-emerald-700 dark:text-emerald-400'
+                    : 'text-rose-700 dark:text-rose-400'
+                }`}
+              >
                 {isHealthLoading ? 'Pinging...' : isOnline ? 'Backend Online' : 'Backend Offline'}
               </span>
               {health?.latencyMs !== undefined && isOnline && (
@@ -172,31 +184,55 @@ export const Navbar: React.FC<NavbarProps> = ({
               )}
             </button>
 
+            {/* Dark / Light Mode Toggle */}
+            <button
+              onClick={toggleTheme}
+              title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
+              className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700/50 transition shadow-sm"
+              aria-label="Toggle theme"
+            >
+              {theme === 'dark' ? (
+                <Sun className="h-4 w-4 text-amber-400 animate-spin-slow" />
+              ) : (
+                <Moon className="h-4 w-4 text-indigo-600" />
+              )}
+            </button>
+
             {/* Global Refresh Button */}
             <button
               onClick={onRefresh}
               disabled={isRefreshing}
               title="Refresh all data"
-              className="p-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/50 transition disabled:opacity-50"
+              className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700/50 transition disabled:opacity-50"
             >
-              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin text-emerald-400' : ''}`} />
+              <RefreshCw
+                className={`h-4 w-4 ${
+                  isRefreshing ? 'animate-spin text-emerald-500' : ''
+                }`}
+              />
             </button>
 
             {/* CSV Export Button */}
             <button
               onClick={handleExportCsv}
               disabled={isExporting}
-              className="hidden sm:flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20 hover:border-emerald-500/50 transition shadow-sm"
+              className="hidden sm:flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20 hover:border-emerald-500/50 transition shadow-sm"
             >
               <Download className={`h-3.5 w-3.5 ${isExporting ? 'animate-bounce' : ''}`} />
-              <span>{isExporting ? 'Exporting...' : exportSuccess ? 'Downloaded!' : 'Export CSV'}</span>
+              <span>
+                {isExporting
+                  ? 'Exporting...'
+                  : exportSuccess
+                  ? 'Downloaded!'
+                  : 'Export CSV'}
+              </span>
             </button>
 
             {/* Settings Trigger */}
             <button
               onClick={() => setIsConfigOpen(true)}
               title="Backend Settings"
-              className="p-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/50 transition"
+              className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700/50 transition"
             >
               <Settings className="h-4 w-4" />
             </button>
@@ -206,29 +242,33 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Export Feedback Banner if any */}
       {exportError && (
-        <div className="bg-rose-500/20 border-t border-rose-500/40 px-4 py-1.5 text-center text-xs text-rose-300">
+        <div className="bg-rose-500/20 border-t border-rose-500/40 px-4 py-1.5 text-center text-xs text-rose-700 dark:text-rose-300">
           {exportError}
         </div>
       )}
 
       {/* Backend Settings Modal */}
       {isConfigOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-md w-full shadow-2xl relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 max-w-md w-full shadow-2xl relative">
             <button
               onClick={() => setIsConfigOpen(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white transition"
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 dark:hover:text-white transition"
             >
               <X className="h-5 w-5" />
             </button>
 
             <div className="flex items-center space-x-3 mb-4">
-              <div className="h-10 w-10 rounded-xl bg-slate-800 flex items-center justify-center border border-slate-700">
-                <Server className="h-5 w-5 text-emerald-400" />
+              <div className="h-10 w-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-slate-200 dark:border-slate-700">
+                <Server className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-white">Backend Connection</h3>
-                <p className="text-xs text-slate-400">Configure target FastAPI Ingestion server</p>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                  Backend Connection
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Configure target FastAPI Ingestion server
+                </p>
               </div>
             </div>
 
@@ -236,15 +276,15 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div
               className={`p-3 rounded-xl mb-4 border text-xs flex items-center justify-between ${
                 isOnline
-                  ? 'bg-emerald-950/40 border-emerald-800/60 text-emerald-300'
-                  : 'bg-rose-950/40 border-rose-800/60 text-rose-300'
+                  ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300'
+                  : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800/60 text-rose-800 dark:text-rose-300'
               }`}
             >
               <div className="flex items-center space-x-2">
                 {isOnline ? (
-                  <CheckCircle2 className="h-4 w-4 text-emerald-400 flex-shrink-0" />
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
                 ) : (
-                  <AlertTriangle className="h-4 w-4 text-rose-400 flex-shrink-0" />
+                  <AlertTriangle className="h-4 w-4 text-rose-600 dark:text-rose-400 flex-shrink-0" />
                 )}
                 <span>
                   {isOnline
@@ -262,7 +302,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             <form onSubmit={handleSaveUrl} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                   Backend API Base URL
                 </label>
                 <input
@@ -271,10 +311,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                   onChange={(e) => setCustomUrl(e.target.value)}
                   placeholder="http://localhost:8000"
                   required
-                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-mono"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono"
                 />
                 <p className="text-[11px] text-slate-500 mt-1">
-                  Default: <span className="font-mono text-slate-400">{DEFAULT_API_BASE_URL}</span>
+                  Default:{' '}
+                  <span className="font-mono text-slate-600 dark:text-slate-400">
+                    {DEFAULT_API_BASE_URL}
+                  </span>
                 </p>
               </div>
 
@@ -287,13 +330,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                     setIsConfigOpen(false);
                     onRefresh();
                   }}
-                  className="px-3 py-2 text-xs font-medium text-slate-400 hover:text-white"
+                  className="px-3 py-2 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                 >
                   Reset Default
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition"
+                  className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold rounded-xl shadow-md shadow-emerald-500/20 transition"
                 >
                   Save & Connect
                 </button>

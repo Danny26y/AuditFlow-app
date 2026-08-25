@@ -21,11 +21,11 @@ export const StatsCards: React.FC<StatsCardsProps> = ({ stats, loading }) => {
         {[1, 2, 3, 4, 5].map((i) => (
           <div
             key={i}
-            className="h-28 rounded-2xl bg-slate-900/60 border border-slate-800 animate-pulse p-4 flex flex-col justify-between"
+            className="h-28 rounded-2xl bg-white/70 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 animate-pulse p-4 flex flex-col justify-between"
           >
-            <div className="h-4 bg-slate-800 rounded w-1/2"></div>
-            <div className="h-7 bg-slate-800 rounded w-3/4"></div>
-            <div className="h-3 bg-slate-800 rounded w-1/3"></div>
+            <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/2"></div>
+            <div className="h-7 bg-slate-200 dark:bg-slate-800 rounded w-3/4"></div>
+            <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded w-1/3"></div>
           </div>
         ))}
       </div>
@@ -52,9 +52,9 @@ export const StatsCards: React.FC<StatsCardsProps> = ({ stats, loading }) => {
       subtitle: 'Primary Producer Registry',
       icon: Users,
       color: 'emerald',
-      bgGlow: 'from-emerald-500/10 to-teal-500/5',
+      bgGlow: 'from-emerald-500/10 to-teal-500/5 dark:from-emerald-500/10 dark:to-teal-500/5',
       borderColor: 'border-emerald-500/30',
-      iconColor: 'text-emerald-400',
+      iconColor: 'text-emerald-600 dark:text-emerald-400',
       badge: '18-Col Verified',
     },
     {
@@ -63,9 +63,9 @@ export const StatsCards: React.FC<StatsCardsProps> = ({ stats, loading }) => {
       subtitle: 'Geotagged Farm Plots',
       icon: Sprout,
       color: 'teal',
-      bgGlow: 'from-teal-500/10 to-cyan-500/5',
+      bgGlow: 'from-teal-500/10 to-cyan-500/5 dark:from-teal-500/10 dark:to-cyan-500/5',
       borderColor: 'border-teal-500/30',
-      iconColor: 'text-teal-400',
+      iconColor: 'text-teal-600 dark:text-teal-400',
       badge: 'Benue Basin',
     },
     {
@@ -74,9 +74,9 @@ export const StatsCards: React.FC<StatsCardsProps> = ({ stats, loading }) => {
       subtitle: 'Estimated Crop & Livestock',
       icon: TrendingUp,
       color: 'sky',
-      bgGlow: 'from-sky-500/10 to-blue-500/5',
+      bgGlow: 'from-sky-500/10 to-blue-500/5 dark:from-sky-500/10 dark:to-blue-500/5',
       borderColor: 'border-sky-500/30',
-      iconColor: 'text-sky-400',
+      iconColor: 'text-sky-600 dark:text-sky-400',
       badge: 'Aggregated',
     },
     {
@@ -85,9 +85,9 @@ export const StatsCards: React.FC<StatsCardsProps> = ({ stats, loading }) => {
       subtitle: 'Immutable Cryptographic Lock',
       icon: Lock,
       color: 'amber',
-      bgGlow: 'from-amber-500/10 to-orange-500/5',
+      bgGlow: 'from-amber-500/10 to-orange-500/5 dark:from-amber-500/10 dark:to-orange-500/5',
       borderColor: 'border-amber-500/30',
-      iconColor: 'text-amber-400',
+      iconColor: 'text-amber-600 dark:text-amber-400',
       badge: complianceRate === 100 ? '100% Compliant' : `${complianceRate}% Locked`,
     },
     {
@@ -96,9 +96,9 @@ export const StatsCards: React.FC<StatsCardsProps> = ({ stats, loading }) => {
       subtitle: 'Field Agent Anchors',
       icon: Radio,
       color: 'indigo',
-      bgGlow: 'from-indigo-500/10 to-purple-500/5',
+      bgGlow: 'from-indigo-500/10 to-purple-500/5 dark:from-indigo-500/10 dark:to-purple-500/5',
       borderColor: 'border-indigo-500/30',
-      iconColor: 'text-indigo-400',
+      iconColor: 'text-indigo-600 dark:text-indigo-400',
       badge: 'Fleet Synchronized',
     },
   ];
@@ -111,26 +111,26 @@ export const StatsCards: React.FC<StatsCardsProps> = ({ stats, loading }) => {
           return (
             <div
               key={idx}
-              className={`relative overflow-hidden rounded-2xl bg-slate-900/80 backdrop-blur-md border ${card.borderColor} bg-gradient-to-b ${card.bgGlow} p-4 shadow-xl transition-all duration-200 hover:scale-[1.01] hover:shadow-emerald-950/20`}
+              className={`relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900/80 backdrop-blur-md border ${card.borderColor} bg-gradient-to-b ${card.bgGlow} p-4 shadow-md dark:shadow-xl transition-all duration-200 hover:scale-[1.01] hover:shadow-lg`}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   {card.title}
                 </span>
-                <div className={`p-1.5 rounded-lg bg-slate-950/60 border border-slate-800 ${card.iconColor}`}>
+                <div className={`p-1.5 rounded-lg bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 ${card.iconColor}`}>
                   <Icon className="h-4 w-4" />
                 </div>
               </div>
 
               <div className="flex items-baseline space-x-2 my-1">
-                <span className="text-2xl font-extrabold tracking-tight text-white font-mono">
+                <span className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white font-mono">
                   {card.value}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-800/60">
-                <span className="text-[11px] text-slate-400 truncate">{card.subtitle}</span>
-                <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-950/80 text-emerald-300 border border-emerald-500/20">
+              <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/60">
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{card.subtitle}</span>
+                <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
                   {card.badge}
                 </span>
               </div>
@@ -141,7 +141,7 @@ export const StatsCards: React.FC<StatsCardsProps> = ({ stats, loading }) => {
 
       {/* Last update footer */}
       {stats?.last_updated && (
-        <div className="flex items-center justify-end space-x-1.5 text-[11px] text-slate-500 pr-1">
+        <div className="flex items-center justify-end space-x-1.5 text-[11px] text-slate-500 dark:text-slate-400 pr-1">
           <Clock className="h-3 w-3" />
           <span>Last synchronized: {new Date(stats.last_updated).toLocaleTimeString()}</span>
         </div>

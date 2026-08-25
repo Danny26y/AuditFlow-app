@@ -10,8 +10,9 @@ import {
   FarmerRecordOut,
   StatsSummaryResponse,
 } from './types/dashboard';
+import { ThemeProvider } from './context/ThemeContext';
 
-export default function App() {
+function DashboardContent() {
   const [activeTab, setActiveTab] = useState<'OPERATIONS' | 'SECURITY'>('OPERATIONS');
   const [stats, setStats] = useState<StatsSummaryResponse | null>(null);
   const [statsLoading, setStatsLoading] = useState<boolean>(true);
@@ -124,8 +125,8 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
-      {/* Top Navigation Bar */}
+    <div className="min-h-screen bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
+      {/* Top Navigation Bar with Dark/Light Mode Toggle */}
       <Navbar
         activeTab={activeTab}
         onTabChange={setActiveTab}
@@ -186,12 +187,20 @@ export default function App() {
       )}
 
       {/* Minimal Footer */}
-      <footer className="border-t border-slate-800/80 bg-slate-950 py-4 px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-500">
+      <footer className="border-t border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-950 py-4 px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-500 transition-colors duration-200">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>AuditFlow Master Registry & Supply Chain Platform · SEC ISA Compliant</span>
           <span>Benue State Agricultural Development Network</span>
         </div>
       </footer>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <DashboardContent />
+    </ThemeProvider>
   );
 }

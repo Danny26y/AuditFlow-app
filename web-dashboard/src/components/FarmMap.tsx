@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { FarmerRecordOut } from '../types/dashboard';
 import { BENUE_AGRICULTURAL_CLUSTERS } from '../constants/benueData';
+import { useTheme } from '../context/ThemeContext';
 
 // Benue State geographic center
 const BENUE_CENTER: [number, number] = [7.3256, 8.9984];
@@ -118,10 +119,18 @@ export const FarmMap: React.FC<FarmMapProps> = ({
   onSelectLga,
   onSelectFarmer,
 }) => {
+  const { theme } = useTheme();
   const [mapCenter, setMapCenter] = useState<[number, number]>(BENUE_CENTER);
   const [mapZoom, setMapZoom] = useState<number>(DEFAULT_ZOOM);
   const [showClusterCentroids, setShowClusterCentroids] = useState<boolean>(true);
-  const [tileLayerType, setTileLayerType] = useState<'dark' | 'satellite' | 'street'>('dark');
+  const [tileLayerType, setTileLayerType] = useState<'dark' | 'satellite' | 'street'>(
+    theme === 'dark' ? 'dark' : 'street'
+  );
+
+  // Sync default tile type when global theme changes unless user explicitly switched
+  useEffect(() => {
+    setTileLayerType(theme === 'dark' ? 'dark' : 'street');
+  }, [theme]);
 
   // Filter records with valid GPS coordinates
   const validGpsRecords = useMemo(() => {
@@ -174,21 +183,21 @@ export const FarmMap: React.FC<FarmMapProps> = ({
   };
 
   return (
-    <div className="relative rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden flex flex-col h-[520px]">
+    <div className="relative rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-md dark:shadow-2xl overflow-hidden flex flex-col h-[520px] transition-colors duration-200">
       {/* Top Map Header & Controls */}
-      <div className="p-3.5 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 flex flex-wrap items-center justify-between gap-2 z-10">
+      <div className="p-3.5 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 z-10">
         <div className="flex items-center space-x-2.5">
-          <div className="p-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
+          <div className="p-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400">
             <MapPin className="h-4 w-4" />
           </div>
           <div>
-            <h3 className="text-xs font-bold text-white flex items-center space-x-2">
+            <h3 className="text-xs font-bold text-slate-900 dark:text-white flex items-center space-x-2">
               <span>Geospatial Farmer Registry Map</span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
                 {validGpsRecords.length} Geotagged Plot{validGpsRecords.length !== 1 ? 's' : ''}
               </span>
             </h3>
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
               Benue State Agricultural Basins & Farm Plots
             </p>
           </div>
@@ -197,13 +206,13 @@ export const FarmMap: React.FC<FarmMapProps> = ({
         {/* LGA Cluster Quick-Filter Pills */}
         <div className="flex items-center space-x-2">
           {/* Tile Layer Selector */}
-          <div className="flex items-center bg-slate-950 p-1 rounded-lg border border-slate-800 text-[11px]">
+          <div className="flex items-center bg-slate-100 dark:bg-slate-950 p-1 rounded-lg border border-slate-200 dark:border-slate-800 text-[11px]">
             <button
               onClick={() => setTileLayerType('dark')}
               className={`px-2 py-0.5 rounded font-medium transition ${
                 tileLayerType === 'dark'
-                  ? 'bg-slate-800 text-emerald-400'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               Dark
@@ -212,8 +221,8 @@ export const FarmMap: React.FC<FarmMapProps> = ({
               onClick={() => setTileLayerType('satellite')}
               className={`px-2 py-0.5 rounded font-medium transition ${
                 tileLayerType === 'satellite'
-                  ? 'bg-slate-800 text-emerald-400'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               Satellite
@@ -222,8 +231,8 @@ export const FarmMap: React.FC<FarmMapProps> = ({
               onClick={() => setTileLayerType('street')}
               className={`px-2 py-0.5 rounded font-medium transition ${
                 tileLayerType === 'street'
-                  ? 'bg-slate-800 text-emerald-400'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               Street
@@ -236,8 +245,8 @@ export const FarmMap: React.FC<FarmMapProps> = ({
             title="Toggle agricultural cluster centroid labels"
             className={`p-1.5 rounded-lg border text-xs flex items-center space-x-1 transition ${
               showClusterCentroids
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-                : 'bg-slate-800 border-slate-700 text-slate-400'
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400'
+                : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400'
             }`}
           >
             <Layers className="h-3.5 w-3.5" />
@@ -248,7 +257,7 @@ export const FarmMap: React.FC<FarmMapProps> = ({
           <button
             onClick={handleResetView}
             title="Reset map view to Benue state"
-            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white text-xs flex items-center space-x-1 transition"
+            className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xs flex items-center space-x-1 transition"
           >
             <RotateCcw className="h-3.5 w-3.5" />
             <span className="text-[11px] hidden sm:inline">Reset</span>
@@ -257,8 +266,8 @@ export const FarmMap: React.FC<FarmMapProps> = ({
       </div>
 
       {/* Cluster Navigation Bar */}
-      <div className="bg-slate-950/80 px-3 py-1.5 border-b border-slate-800/80 flex items-center space-x-1.5 overflow-x-auto text-[11px] scrollbar-thin">
-        <span className="text-slate-500 flex items-center space-x-1 flex-shrink-0">
+      <div className="bg-slate-50 dark:bg-slate-950/80 px-3 py-1.5 border-b border-slate-200 dark:border-slate-800/80 flex items-center space-x-1.5 overflow-x-auto text-[11px] scrollbar-thin">
+        <span className="text-slate-500 dark:text-slate-500 flex items-center space-x-1 flex-shrink-0">
           <Navigation className="h-3 w-3" />
           <span>Quick Hubs:</span>
         </span>
@@ -268,8 +277,8 @@ export const FarmMap: React.FC<FarmMapProps> = ({
             onClick={() => handleSelectCentroid(c)}
             className={`flex-shrink-0 px-2 py-0.5 rounded-md font-medium transition ${
               selectedLga.toLowerCase() === c.lga.toLowerCase()
-                ? 'bg-emerald-500 text-slate-950 font-bold'
-                : 'bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-white border border-slate-800'
+                ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
+                : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800'
             }`}
           >
             {c.lga} ({c.ward_community})
@@ -304,21 +313,21 @@ export const FarmMap: React.FC<FarmMapProps> = ({
               >
                 <Popup>
                   <div className="p-3 max-w-xs text-xs">
-                    <div className="flex items-center space-x-1.5 text-emerald-400 font-bold text-sm mb-1">
+                    <div className="flex items-center space-x-1.5 text-emerald-600 dark:text-emerald-400 font-bold text-sm mb-1">
                       <Sprout className="h-4 w-4" />
                       <span>{cluster.lga} Agricultural Hub</span>
                     </div>
-                    <p className="text-slate-300 font-semibold mb-1">
+                    <p className="text-slate-700 dark:text-slate-300 font-semibold mb-1">
                       Ward: {cluster.ward_community}
                     </p>
-                    <p className="text-slate-400 text-[11px] mb-2">{cluster.description}</p>
-                    <div className="text-[11px] bg-slate-950 p-2 rounded border border-slate-800 text-slate-300">
-                      <span className="text-emerald-400 font-semibold">Primary Crops:</span>{' '}
+                    <p className="text-slate-500 dark:text-slate-400 text-[11px] mb-2">{cluster.description}</p>
+                    <div className="text-[11px] bg-slate-50 dark:bg-slate-950 p-2 rounded border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300">
+                      <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Primary Crops:</span>{' '}
                       {cluster.default_crop}
                     </div>
                     <button
                       onClick={() => onSelectLga(cluster.lga)}
-                      className="mt-2.5 w-full py-1 px-2 rounded bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-[11px] transition text-center"
+                      className="mt-2.5 w-full py-1 px-2 rounded bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-[11px] transition text-center shadow-sm"
                     >
                       Filter Farmers in {cluster.lga}
                     </button>
@@ -341,15 +350,15 @@ export const FarmMap: React.FC<FarmMapProps> = ({
                 icon={icon}
               >
                 <Popup>
-                  <div className="p-3 max-w-xs text-slate-100 text-xs">
-                    <div className="flex items-start justify-between gap-2 mb-2 pb-2 border-b border-slate-800">
+                  <div className="p-3 max-w-xs text-slate-900 dark:text-slate-100 text-xs">
+                    <div className="flex items-start justify-between gap-2 mb-2 pb-2 border-b border-slate-200 dark:border-slate-800">
                       <div>
-                        <h4 className="font-bold text-sm text-white">{farmerName}</h4>
-                        <p className="text-[11px] text-slate-400">
+                        <h4 className="font-bold text-sm text-slate-900 dark:text-white">{farmerName}</h4>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
                           {farmer.community_ward || farmer.ward || 'Community'}, {farmer.lga}
                         </p>
                       </div>
-                      <span className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                      <span className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
                         <Lock className="h-2.5 w-2.5" />
                         <span>SEC LOCKED</span>
                       </span>
@@ -357,34 +366,34 @@ export const FarmMap: React.FC<FarmMapProps> = ({
 
                     <div className="space-y-1.5 text-[11px] mb-3">
                       <div className="flex justify-between">
-                        <span className="text-slate-400">Crop / Asset:</span>
-                        <span className="font-semibold text-emerald-300">
+                        <span className="text-slate-500 dark:text-slate-400">Crop / Asset:</span>
+                        <span className="font-semibold text-emerald-600 dark:text-emerald-300">
                           {farmer.crop_type || 'Mixed Crops'}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-400">Farm Size:</span>
-                        <span className="font-mono text-white">
+                        <span className="text-slate-500 dark:text-slate-400">Farm Size:</span>
+                        <span className="font-mono text-slate-900 dark:text-white">
                           {farmer.farm_size_hectares ? `${farmer.farm_size_hectares} ha` : '—'}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-400">Est. Yield:</span>
-                        <span className="font-mono text-white">
+                        <span className="text-slate-500 dark:text-slate-400">Est. Yield:</span>
+                        <span className="font-mono text-slate-900 dark:text-white">
                           {farmer.estimated_yield_tonnes
                             ? `${farmer.estimated_yield_tonnes} tonnes`
                             : '—'}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-400">NIN:</span>
-                        <span className="font-mono text-slate-300 tracking-wider">
+                        <span className="text-slate-500 dark:text-slate-400">NIN:</span>
+                        <span className="font-mono text-slate-700 dark:text-slate-300 tracking-wider">
                           {farmer.nin}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-400">Cooperative:</span>
-                        <span className="text-slate-200 truncate max-w-[140px]">
+                        <span className="text-slate-500 dark:text-slate-400">Cooperative:</span>
+                        <span className="text-slate-700 dark:text-slate-200 truncate max-w-[140px]">
                           {farmer.cooperative_name || 'Independent'}
                         </span>
                       </div>
@@ -405,12 +414,12 @@ export const FarmMap: React.FC<FarmMapProps> = ({
         </MapContainer>
 
         {/* Floating Legend */}
-        <div className="absolute bottom-3 left-3 z-[1000] bg-slate-900/90 backdrop-blur-md border border-slate-800 p-2.5 rounded-xl text-[10px] space-y-1 shadow-xl max-w-[170px] hidden md:block">
-          <div className="font-bold text-slate-300 mb-1 flex items-center space-x-1">
-            <Sprout className="h-3 w-3 text-emerald-400" />
+        <div className="absolute bottom-3 left-3 z-[1000] bg-white/95 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200 dark:border-slate-800 p-2.5 rounded-xl text-[10px] space-y-1 shadow-md dark:shadow-xl max-w-[170px] hidden md:block">
+          <div className="font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center space-x-1">
+            <Sprout className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
             <span>Produce Markers</span>
           </div>
-          <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-slate-400">
+          <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-slate-500 dark:text-slate-400">
             <div className="flex items-center space-x-1.5">
               <span className="h-2 w-2 rounded-full bg-lime-500"></span>
               <span>Soybeans</span>

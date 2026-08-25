@@ -127,38 +127,38 @@ export const TransitReconciler: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Title & Description Header */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-900 to-slate-950 p-6 rounded-2xl border border-slate-800 shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-gradient-to-r from-white via-white to-slate-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-md dark:shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors duration-200">
         <div className="space-y-1">
           <div className="flex items-center space-x-2.5">
-            <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400">
+            <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400">
               <Scale className="h-5 w-5" />
             </div>
-            <h2 className="text-lg font-bold text-white">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">
               SEC Supply Chain Mass-Balance & Transit Leakage Engine
             </h2>
           </div>
-          <p className="text-xs text-slate-400 max-w-2xl">
+          <p className="text-xs text-slate-600 dark:text-slate-400 max-w-2xl">
             Enforces strict weighbridge mass-balance verification: ΔM = Mass(field) - Mass(store). Automatically flags unauthorized extractions and generates unalterable audit trails under SEC ISA regulatory frameworks.
           </p>
         </div>
 
         {/* Live Equation Pill */}
-        <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 font-mono text-xs text-slate-300">
+        <div className="bg-slate-100 dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800 font-mono text-xs text-slate-700 dark:text-slate-300">
           <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">
             Current Delta M
           </div>
           <div className="flex items-center space-x-2">
-            <span className="font-bold text-white">{formData.mass_field} kg</span>
-            <span className="text-slate-500">-</span>
-            <span className="font-bold text-white">{formData.mass_store} kg</span>
-            <span className="text-slate-500">=</span>
+            <span className="font-bold text-slate-900 dark:text-white">{formData.mass_field} kg</span>
+            <span className="text-slate-400 dark:text-slate-500">-</span>
+            <span className="font-bold text-slate-900 dark:text-white">{formData.mass_store} kg</span>
+            <span className="text-slate-400 dark:text-slate-500">=</span>
             <span
               className={`font-bold px-2 py-0.5 rounded text-xs ${
                 liveDeltaM === 0
-                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                  ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30'
                   : liveDeltaM > 0
-                  ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                  : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                  ? 'bg-rose-500/20 text-rose-700 dark:text-rose-400 border border-rose-500/30'
+                  : 'bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30'
               }`}
             >
               {liveDeltaM > 0 ? `+${liveDeltaM}` : liveDeltaM} kg
@@ -169,8 +169,8 @@ export const TransitReconciler: React.FC = () => {
 
       {/* Preset Scenarios */}
       <div className="space-y-2">
-        <span className="text-xs font-semibold text-slate-400 flex items-center space-x-1.5">
-          <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+        <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 flex items-center space-x-1.5">
+          <Sparkles className="h-3.5 w-3.5 text-amber-500" />
           <span>Quick Scenario Presets:</span>
         </span>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -178,12 +178,12 @@ export const TransitReconciler: React.FC = () => {
             <button
               key={idx}
               onClick={() => handleApplyPreset(p.data)}
-              className="text-left p-3 rounded-xl bg-slate-900/80 hover:bg-slate-850 border border-slate-800 hover:border-slate-700 transition space-y-1 group"
+              className="text-left p-3 rounded-xl bg-white dark:bg-slate-900/80 hover:bg-slate-50 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition space-y-1 group shadow-sm"
             >
-              <div className="text-xs font-bold text-white group-hover:text-amber-400 transition-colors">
+              <div className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
                 {p.name}
               </div>
-              <div className="text-[11px] text-slate-400">{p.description}</div>
+              <div className="text-[11px] text-slate-500 dark:text-slate-400">{p.description}</div>
             </button>
           ))}
         </div>
@@ -191,13 +191,13 @@ export const TransitReconciler: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Form Column */}
-        <div className="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-2xl space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-            <h3 className="text-sm font-bold text-white flex items-center space-x-2">
-              <FileCheck className="h-4 w-4 text-emerald-400" />
+        <div className="lg:col-span-7 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-md dark:shadow-2xl space-y-4 transition-colors duration-200">
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center space-x-2">
+              <FileCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
               <span>Weighbridge Manifest Verification Form</span>
             </h3>
-            <span className="text-[11px] font-mono text-slate-400">
+            <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
               POST /api/v1/security/reconcile-manifest
             </span>
           </div>
@@ -206,7 +206,7 @@ export const TransitReconciler: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               {/* Batch Ticket ID */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Batch Ticket ID
                 </label>
                 <input
@@ -217,13 +217,13 @@ export const TransitReconciler: React.FC = () => {
                   }
                   required
                   placeholder="BATCH-2026-MKD-089A"
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white font-mono focus:outline-none focus:ring-1 focus:ring-amber-500"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white font-mono focus:outline-none focus:ring-1 focus:ring-amber-500"
                 />
               </div>
 
               {/* Soft ID Token */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Soft ID Token
                 </label>
                 <input
@@ -234,13 +234,13 @@ export const TransitReconciler: React.FC = () => {
                   }
                   required
                   placeholder="SOFT-ID-992384"
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white font-mono focus:outline-none focus:ring-1 focus:ring-amber-500"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white font-mono focus:outline-none focus:ring-1 focus:ring-amber-500"
                 />
               </div>
 
               {/* Enumerator ID */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Field Enumerator Anchor ID
                 </label>
                 <input
@@ -251,13 +251,13 @@ export const TransitReconciler: React.FC = () => {
                   }
                   required
                   placeholder="ENUM-MKD-BRB-01"
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white font-mono focus:outline-none focus:ring-1 focus:ring-amber-500"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white font-mono focus:outline-none focus:ring-1 focus:ring-amber-500"
                 />
               </div>
 
               {/* Weighbridge Operator ID */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Weighbridge Operator ID
                 </label>
                 <input
@@ -268,13 +268,13 @@ export const TransitReconciler: React.FC = () => {
                   }
                   required
                   placeholder="OP-WHD-04"
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white font-mono focus:outline-none focus:ring-1 focus:ring-amber-500"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white font-mono focus:outline-none focus:ring-1 focus:ring-amber-500"
                 />
               </div>
 
               {/* Mass Field */}
-              <div className="bg-slate-950 p-3 rounded-xl border border-slate-800">
-                <label className="block text-xs font-semibold text-emerald-400 mb-1">
+              <div className="bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
+                <label className="block text-xs font-semibold text-emerald-700 dark:text-emerald-400 mb-1">
                   Initial Farm Gate Weight (kg)
                 </label>
                 <input
@@ -286,7 +286,7 @@ export const TransitReconciler: React.FC = () => {
                     setFormData({ ...formData, mass_field: parseFloat(e.target.value) || 0 })
                   }
                   required
-                  className="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white font-mono font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white font-mono font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 />
                 <span className="text-[10px] text-slate-500 mt-1 block">
                   Scanned at regional cluster aggregation node
@@ -294,8 +294,8 @@ export const TransitReconciler: React.FC = () => {
               </div>
 
               {/* Mass Store */}
-              <div className="bg-slate-950 p-3 rounded-xl border border-slate-800">
-                <label className="block text-xs font-semibold text-teal-300 mb-1">
+              <div className="bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
+                <label className="block text-xs font-semibold text-teal-700 dark:text-teal-300 mb-1">
                   Warehouse Weighbridge Arrival (kg)
                 </label>
                 <input
@@ -307,7 +307,7 @@ export const TransitReconciler: React.FC = () => {
                     setFormData({ ...formData, mass_store: parseFloat(e.target.value) || 0 })
                   }
                   required
-                  className="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white font-mono font-bold focus:outline-none focus:ring-1 focus:ring-teal-500"
+                  className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white font-mono font-bold focus:outline-none focus:ring-1 focus:ring-teal-500"
                 />
                 <span className="text-[10px] text-slate-500 mt-1 block">
                   Scanned at central silo terminal
@@ -316,7 +316,7 @@ export const TransitReconciler: React.FC = () => {
             </div>
 
             {error && (
-              <div className="p-3 rounded-xl bg-rose-950/50 border border-rose-800 text-rose-300 text-xs flex items-center space-x-2">
+              <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-300 text-xs flex items-center space-x-2">
                 <AlertTriangle className="h-4 w-4 flex-shrink-0" />
                 <span>{error}</span>
               </div>
@@ -326,7 +326,7 @@ export const TransitReconciler: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="flex items-center space-x-2 px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-xl shadow-lg shadow-amber-500/20 transition disabled:opacity-50"
+                className="flex items-center space-x-2 px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-xl shadow-md shadow-amber-500/20 transition disabled:opacity-50"
               >
                 {loading ? (
                   <>
@@ -346,27 +346,27 @@ export const TransitReconciler: React.FC = () => {
 
         {/* Verdict & Audit Response Column */}
         <div className="lg:col-span-5 space-y-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-2xl flex flex-col justify-between min-h-[380px]">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-md dark:shadow-2xl flex flex-col justify-between min-h-[380px] transition-colors duration-200">
             <div className="space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 className="text-sm font-bold text-white flex items-center space-x-2">
-                  <ShieldCheck className="h-4 w-4 text-amber-400" />
+              <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center space-x-2">
+                  <ShieldCheck className="h-4 w-4 text-amber-500" />
                   <span>Reconciliation Verdict</span>
                 </h3>
                 {result && (
-                  <span className="font-mono text-[11px] text-slate-400">
+                  <span className="font-mono text-[11px] text-slate-500 dark:text-slate-400">
                     Log: {result.audit_checksum}
                   </span>
                 )}
               </div>
 
               {!result && !loading && (
-                <div className="py-16 text-center text-slate-500 space-y-3">
-                  <Scale className="h-12 w-12 text-slate-700 mx-auto" />
-                  <p className="text-xs text-slate-400 font-medium">
+                <div className="py-16 text-center text-slate-400 dark:text-slate-500 space-y-3">
+                  <Scale className="h-12 w-12 text-slate-300 dark:text-slate-700 mx-auto" />
+                  <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">
                     Submit the form or pick a preset to evaluate weighbridge manifest leakage.
                   </p>
-                  <p className="text-[11px] text-slate-600">
+                  <p className="text-[11px] text-slate-400 dark:text-slate-600">
                     Evaluates Delta M = Mass_Field - Mass_Store in accordance with SEC ISA 2025 \ IV(40).
                   </p>
                 </div>
@@ -374,8 +374,8 @@ export const TransitReconciler: React.FC = () => {
 
               {loading && (
                 <div className="py-16 text-center space-y-3">
-                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-amber-400 border-t-transparent mx-auto"></div>
-                  <p className="text-xs text-slate-400">
+                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-amber-500 border-t-transparent mx-auto"></div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
                     Processing cryptographic reconciliation and evaluating mass variance...
                   </p>
                 </div>
@@ -387,16 +387,16 @@ export const TransitReconciler: React.FC = () => {
                   <div
                     className={`p-4 rounded-xl border flex items-start space-x-3.5 ${
                       !result.is_flagged
-                        ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300'
+                        ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-500/40 text-emerald-800 dark:text-emerald-300'
                         : result.severity === 'WARNING'
-                        ? 'bg-amber-950/40 border-amber-500/40 text-amber-300'
-                        : 'bg-rose-950/40 border-rose-500/40 text-rose-300'
+                        ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-500/40 text-amber-800 dark:text-amber-300'
+                        : 'bg-rose-50 dark:bg-rose-950/40 border-rose-300 dark:border-rose-500/40 text-rose-800 dark:text-rose-300'
                     }`}
                   >
                     {!result.is_flagged ? (
-                      <ShieldCheck className="h-6 w-6 text-emerald-400 flex-shrink-0 mt-0.5" />
+                      <ShieldCheck className="h-6 w-6 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                     ) : (
-                      <ShieldAlert className="h-6 w-6 text-rose-400 flex-shrink-0 mt-0.5" />
+                      <ShieldAlert className="h-6 w-6 text-rose-600 dark:text-rose-400 flex-shrink-0 mt-0.5" />
                     )}
 
                     <div className="space-y-1">
@@ -405,26 +405,26 @@ export const TransitReconciler: React.FC = () => {
                           {result.status}
                         </span>
                         {result.severity && (
-                          <span className="text-[10px] px-2 py-0.5 rounded font-bold uppercase bg-slate-950/80 border border-current">
+                          <span className="text-[10px] px-2 py-0.5 rounded font-bold uppercase bg-white/80 dark:bg-slate-950/80 border border-current">
                             {result.severity}
                           </span>
                         )}
                       </div>
-                      <p className="text-xs leading-relaxed text-slate-200">
+                      <p className="text-xs leading-relaxed text-slate-700 dark:text-slate-200">
                         {result.details || result.incident_details}
                       </p>
                     </div>
                   </div>
 
                   {/* Variance Metrics Breakdown */}
-                  <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2.5 text-xs">
+                  <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2.5 text-xs">
                     <div className="flex justify-between items-center">
-                      <span className="text-slate-400">Mass Variance (Delta M):</span>
+                      <span className="text-slate-500 dark:text-slate-400">Mass Variance (Delta M):</span>
                       <span
                         className={`font-mono font-bold text-sm px-2 py-0.5 rounded ${
                           result.mass_variance === 0
-                            ? 'text-emerald-400 bg-emerald-500/10'
-                            : 'text-rose-400 bg-rose-500/10'
+                            ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10'
+                            : 'text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10'
                         }`}
                       >
                         {result.mass_variance > 0
@@ -435,16 +435,16 @@ export const TransitReconciler: React.FC = () => {
                       </span>
                     </div>
 
-                    <div className="flex justify-between items-center border-t border-slate-850 pt-2">
-                      <span className="text-slate-400">Audit Checksum ID:</span>
-                      <span className="font-mono text-slate-200 font-semibold">
+                    <div className="flex justify-between items-center border-t border-slate-200 dark:border-slate-800 pt-2">
+                      <span className="text-slate-500 dark:text-slate-400">Audit Checksum ID:</span>
+                      <span className="font-mono text-slate-800 dark:text-slate-200 font-semibold">
                         {result.audit_checksum}
                       </span>
                     </div>
 
                     {result.regulatory_context && (
-                      <div className="border-t border-slate-850 pt-2">
-                        <span className="text-[11px] text-amber-400/90 font-medium block">
+                      <div className="border-t border-slate-200 dark:border-slate-800 pt-2">
+                        <span className="text-[11px] text-amber-700 dark:text-amber-400/90 font-medium block">
                           ⚖️ {result.regulatory_context}
                         </span>
                       </div>
@@ -455,7 +455,7 @@ export const TransitReconciler: React.FC = () => {
             </div>
 
             {/* Bottom Audit Integrity Note */}
-            <div className="pt-3 border-t border-slate-800 text-[11px] text-slate-500 flex items-center space-x-1.5">
+            <div className="pt-3 border-t border-slate-200 dark:border-slate-800 text-[11px] text-slate-500 flex items-center space-x-1.5">
               <Lock className="h-3 w-3 text-slate-400" />
               <span>Immutable cryptographic audit logs recorded in master session.</span>
             </div>
@@ -465,15 +465,15 @@ export const TransitReconciler: React.FC = () => {
 
       {/* Recent Session Reconciliations History */}
       {history.length > 0 && (
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-2xl space-y-3">
-          <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center space-x-1.5">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-md dark:shadow-2xl space-y-3 transition-colors duration-200">
+          <h3 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center space-x-1.5">
             <History className="h-3.5 w-3.5 text-slate-400" />
             <span>Session Audit History ({history.length})</span>
           </h3>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-slate-300">
-              <thead className="text-[10px] text-slate-500 uppercase tracking-wider border-b border-slate-800">
+            <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
+              <thead className="text-[10px] text-slate-500 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
                 <tr>
                   <th className="py-2 px-3">Time</th>
                   <th className="py-2 px-3">Batch ID</th>
@@ -484,17 +484,19 @@ export const TransitReconciler: React.FC = () => {
                   <th className="py-2 px-3">Audit Checksum</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/50">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
                 {history.map((h, i) => (
-                  <tr key={i} className="hover:bg-slate-850/50">
-                    <td className="py-2 px-3 text-slate-400 font-mono text-[11px]">{h.timestamp}</td>
-                    <td className="py-2 px-3 font-mono font-semibold text-white">{h.request.batch_ticket_id}</td>
+                  <tr key={i} className="hover:bg-slate-50 dark:hover:bg-slate-850/50">
+                    <td className="py-2 px-3 text-slate-500 dark:text-slate-400 font-mono text-[11px]">{h.timestamp}</td>
+                    <td className="py-2 px-3 font-mono font-semibold text-slate-900 dark:text-white">{h.request.batch_ticket_id}</td>
                     <td className="py-2 px-3 font-mono">{h.request.mass_field} kg</td>
                     <td className="py-2 px-3 font-mono">{h.request.mass_store} kg</td>
                     <td className="py-2 px-3 font-mono font-bold">
                       <span
                         className={
-                          h.response.mass_variance === 0 ? 'text-emerald-400' : 'text-rose-400'
+                          h.response.mass_variance === 0
+                            ? 'text-emerald-700 dark:text-emerald-400'
+                            : 'text-rose-700 dark:text-rose-400'
                         }
                       >
                         {h.response.mass_variance > 0 ? `+${h.response.mass_variance}` : h.response.mass_variance} kg
@@ -504,14 +506,14 @@ export const TransitReconciler: React.FC = () => {
                       <span
                         className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold ${
                           !h.response.is_flagged
-                            ? 'bg-emerald-500/20 text-emerald-300'
-                            : 'bg-rose-500/20 text-rose-300'
+                            ? 'bg-emerald-500/20 text-emerald-800 dark:text-emerald-300'
+                            : 'bg-rose-500/20 text-rose-800 dark:text-rose-300'
                         }`}
                       >
                         {h.response.status}
                       </span>
                     </td>
-                    <td className="py-2 px-3 font-mono text-slate-400 text-[11px]">
+                    <td className="py-2 px-3 font-mono text-slate-500 dark:text-slate-400 text-[11px]">
                       {h.response.audit_checksum}
                     </td>
                   </tr>
