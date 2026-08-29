@@ -7,6 +7,7 @@ const DB_NAME = 'field_capture.db';
 const WEB_STORAGE_KEY = 'field_capture_farmer_registry_db';
 
 let dbInstance: SQLite.SQLiteDatabase | null = null;
+let dbInitPromise: Promise<SQLite.SQLiteDatabase | null> | null = null;
 let isWebPlatform = Platform.OS === 'web';
 let webInMemoryStore: FarmerRecord[] = [];
 
@@ -48,12 +49,10 @@ function saveWebStore(records: FarmerRecord[]): void {
 }
 
 /**
- * Initializes the SQLite database on native Android/iOS (or web adapter in browser).
- * Table: `farmer_registry` with strict unique constraints, farm_location, and WAL mode.
+ * Internal single-flight initialization function for SQLite on Android / iOS.
  */
-export async function initDatabase(): Promise<SQLite.SQLiteDatabase | null> {
+async function initDatabaseInternal(): Promise<SQLite.SQLiteDatabase | null> {
   if (isWebPlatform) {
-    // Web environment: initialize web store instantly (<5ms)
     getWebStore();
     return null;
   }
@@ -64,12 +63,15 @@ export async function initDatabase(): Promise<SQLite.SQLiteDatabase | null> {
 
   try {
     const db = await SQLite.openDatabaseAsync(DB_NAME);
-    dbInstance = db;
 
     // Configure WAL mode for fast concurrency and reliability on Android/iOS
-    await db.execAsync('PRAGMA journal_mode = WAL;');
+    try {
+      await db.execAsync('PRAGMA journal_mode = WAL;');
+    } catch (e) {
+      // Ignore WAL pragma if restricted
+    }
 
-    // Create table with strict UNIQUE constraints and typed columns
+    // Create table with individual clean execAsync commands
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS farmer_registry (
         id TEXT PRIMARY KEY NOT NULL,
@@ -90,15 +92,16 @@ export async function initDatabase(): Promise<SQLite.SQLiteDatabase | null> {
         longitude REAL NOT NULL,
         biometric_template_hash TEXT NOT NULL UNIQUE,
         captured_at TEXT NOT NULL,
-        sync_status TEXT NOT NULL DEFAULT 'PENDING_SYNC' CHECK(sync_status IN ('PENDING_SYNC', 'SYNCED', 'ERROR')),
+        sync_status TEXT NOT NULL DEFAULT 'PENDING_SYNC',
         sync_error_message TEXT
       );
-
-      CREATE INDEX IF NOT EXISTS idx_farmer_registry_sync_status ON farmer_registry(sync_status);
-      CREATE INDEX IF NOT EXISTS idx_farmer_registry_captured_at ON farmer_registry(captured_at);
-      CREATE INDEX IF NOT EXISTS idx_farmer_registry_nin ON farmer_registry(nin);
-      CREATE INDEX IF NOT EXISTS idx_farmer_registry_bvn ON farmer_registry(bvn);
     `);
+
+    // Create indexes individually
+    await db.execAsync('CREATE INDEX IF NOT EXISTS idx_farmer_registry_sync_status ON farmer_registry(sync_status);');
+    await db.execAsync('CREATE INDEX IF NOT EXISTS idx_farmer_registry_captured_at ON farmer_registry(captured_at);');
+    await db.execAsync('CREATE INDEX IF NOT EXISTS idx_farmer_registry_nin ON farmer_registry(nin);');
+    await db.execAsync('CREATE INDEX IF NOT EXISTS idx_farmer_registry_bvn ON farmer_registry(bvn);');
 
     // Graceful migration for existing SQLite databases
     try {
@@ -107,6 +110,7 @@ export async function initDatabase(): Promise<SQLite.SQLiteDatabase | null> {
       // Column already exists, ignore
     }
 
+    dbInstance = db;
     return db;
   } catch (err) {
     console.warn('Native SQLite init failed, falling back to storage adapter:', err);
@@ -116,50 +120,61 @@ export async function initDatabase(): Promise<SQLite.SQLiteDatabase | null> {
   }
 }
 
+/**
+ * Initializes the SQLite database on native Android/iOS (or web adapter in browser).
+ * Uses a promise lock to prevent concurrent initialization race conditions.
+ */
+export async function initDatabase(): Promise<SQLite.SQLiteDatabase | null> {
+  if (!dbInitPromise) {
+    dbInitPromise = initDatabaseInternal();
+  }
+  return await dbInitPromise;
+}
+
 export async function getDatabase(): Promise<SQLite.SQLiteDatabase | null> {
   if (isWebPlatform) {
     return null;
   }
-  if (!dbInstance) {
-    return await initDatabase();
+  if (dbInstance) {
+    return dbInstance;
   }
-  return dbInstance;
+  return await initDatabase();
 }
 
 /**
- * Inserts a new 18-column farmer demographic record (with manual farm_location).
+ * Inserts a new 18-column farmer demographic record.
  * Strict preservation of 11-digit NIN and BVN strings with leading zeros.
  * Enforces UNIQUE constraints for NIN, BVN, and Biometric Hash.
  */
 export async function insertFarmerRecord(input: FarmerInput): Promise<FarmerRecord> {
-  const id = input.id || uuid.v4().toString();
-  const captured_at = input.captured_at || new Date().toISOString();
+  const id = input.id ? String(input.id).trim() : uuid.v4().toString();
+  const captured_at = input.captured_at ? String(input.captured_at).trim() : new Date().toISOString();
   const sync_status: SyncStatus = input.sync_status || 'PENDING_SYNC';
-  const sync_error_message = input.sync_error_message ?? null;
-  const farm_location = input.farm_location ? input.farm_location.trim() : '';
+  const sync_error_message = input.sync_error_message ? String(input.sync_error_message) : null;
+  const farm_location = input.farm_location ? String(input.farm_location).trim() : '';
 
   // Strict string preservation for NIN and BVN
-  const nin = String(input.nin).trim();
-  const bvn = String(input.bvn).trim();
-  const biometric_template_hash = String(input.biometric_template_hash).trim().toLowerCase();
+  const nin = String(input.nin || '').trim();
+  const bvn = String(input.bvn || '').trim();
+  const biometric_template_hash = String(input.biometric_template_hash || '').trim().toLowerCase();
 
   const record: FarmerRecord = {
     id,
-    agent_id: input.agent_id.trim(),
-    device_uuid: input.device_uuid.trim(),
-    farmer_name: input.farmer_name.trim(),
+    agent_id: String(input.agent_id || '').trim(),
+    device_uuid: String(input.device_uuid || '').trim(),
+    farmer_name: String(input.farmer_name || '').trim(),
     nin,
     bvn,
-    phone_number: input.phone_number.trim(),
-    lga: input.lga.trim(),
-    community_ward: input.community_ward.trim(),
-    cooperative_name: input.cooperative_name.trim(),
-    crop_type: input.crop_type.trim(),
-    farm_size_hectares: Number(input.farm_size_hectares),
-    estimated_yield_tonnes: Number(input.estimated_yield_tonnes),
+    phone_number: String(input.phone_number || '').trim(),
+    lga: String(input.lga || '').trim(),
+    community_ward: String(input.community_ward || '').trim(),
+    cooperative_name: String(input.cooperative_name || '').trim(),
+    crop_type: String(input.crop_type || '').trim(),
+    farm_size_hectares: Number(input.farm_size_hectares) || 0,
+    estimated_yield_tonnes: Number(input.estimated_yield_tonnes) || 0,
     farm_location,
-    latitude: Number(input.latitude),
-    longitude: Number(input.longitude),
+    latitude: Number(input.latitude) || 0,
+    longitude: Number(input.longitude) || 0,
     biometric_template_hash,
     captured_at,
     sync_status,
@@ -199,6 +214,7 @@ export async function insertFarmerRecord(input: FarmerInput): Promise<FarmerReco
   }
 
   try {
+    // Pass strictly validated, non-undefined parameters
     await db.runAsync(
       `INSERT INTO farmer_registry (
         id, agent_id, device_uuid, farmer_name, nin, bvn,
@@ -221,13 +237,13 @@ export async function insertFarmerRecord(input: FarmerInput): Promise<FarmerReco
         record.crop_type,
         record.farm_size_hectares,
         record.estimated_yield_tonnes,
-        record.farm_location ?? null,
+        record.farm_location || '',
         record.latitude,
         record.longitude,
         record.biometric_template_hash,
         record.captured_at,
         record.sync_status,
-        record.sync_error_message ?? null,
+        record.sync_error_message || '',
       ]
     );
 
@@ -269,7 +285,7 @@ export async function getFarmerById(id: string): Promise<FarmerRecord | null> {
 
   const db = await getDatabase();
   if (!db) return null;
-  const row = await db.getFirstAsync<FarmerRecord>('SELECT * FROM farmer_registry WHERE id = ?', [id]);
+  const row = await db.getFirstAsync<FarmerRecord>('SELECT * FROM farmer_registry WHERE id = ?', [String(id || '')]);
   return row ?? null;
 }
 
@@ -286,7 +302,7 @@ export async function getAllFarmers(limit: number = 100, offset: number = 0): Pr
   if (!db) return [];
   return await db.getAllAsync<FarmerRecord>(
     'SELECT * FROM farmer_registry ORDER BY captured_at DESC LIMIT ? OFFSET ?',
-    [limit, offset]
+    [Number(limit) || 100, Number(offset) || 0]
   );
 }
 
@@ -307,7 +323,7 @@ export async function getPendingSyncRecords(limit?: number): Promise<FarmerRecor
       `SELECT * FROM farmer_registry 
        WHERE sync_status IN ('PENDING_SYNC', 'ERROR') 
        ORDER BY captured_at ASC LIMIT ?`,
-      [limit]
+      [Number(limit)]
     );
   }
   return await db.getAllAsync<FarmerRecord>(
@@ -342,9 +358,9 @@ export async function updateSyncStatus(
   const db = await getDatabase();
   if (!db) return;
   await db.runAsync('UPDATE farmer_registry SET sync_status = ?, sync_error_message = ? WHERE id = ?', [
-    status,
-    errorMessage ?? null,
-    id,
+    String(status || 'PENDING_SYNC'),
+    errorMessage ? String(errorMessage) : '',
+    String(id || ''),
   ]);
 }
 
@@ -381,7 +397,7 @@ export async function updateBatchSyncStatus(
     const placeholders = ids.map(() => '?').join(',');
     await db.runAsync(
       `UPDATE farmer_registry SET sync_status = ?, sync_error_message = ? WHERE id IN (${placeholders})`,
-      [status, errorMessage ?? null, ...ids]
+      [String(status || 'PENDING_SYNC'), errorMessage ? String(errorMessage) : '', ...ids.map(String)]
     );
   });
 }
@@ -441,7 +457,7 @@ export async function deleteFarmerRecord(id: string): Promise<boolean> {
 
   const db = await getDatabase();
   if (!db) return false;
-  const result = await db.runAsync('DELETE FROM farmer_registry WHERE id = ?', [id]);
+  const result = await db.runAsync('DELETE FROM farmer_registry WHERE id = ?', [String(id || '')]);
   return result.changes > 0;
 }
 

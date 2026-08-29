@@ -15,7 +15,7 @@ import {
 } from '../db/database';
 
 export const BATCH_SIZE = 10;
-export const DEFAULT_BACKEND_URL = 'http://10.0.2.2:8000'; // Android emulator localhost or FastAPI server
+export const DEFAULT_BACKEND_URL = 'https://auditflow-app.fastapicloud.dev'; // Live FastAPI Cloud production server
 
 type SyncProgressCallback = (progress: SyncProgress) => void;
 
@@ -26,7 +26,7 @@ class SyncEngine {
   private isAutoSyncEnabled: boolean = true;
   private isOnline: boolean = false;
   private listeners: Set<SyncProgressCallback> = new Set();
-  private mockBackendMode: boolean = true; // Auto-fallback for testing without running FastAPI server
+  private mockBackendMode: boolean = false; // Connect to live FastAPI backend by default
 
   private progress: SyncProgress = {
     isSyncing: false,

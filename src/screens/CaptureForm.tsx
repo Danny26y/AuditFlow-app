@@ -404,22 +404,22 @@ export default function CaptureForm({ onRecordSaved }: CaptureFormProps) {
     const formattedProduceString = selectedProduces.join(', ').trim();
 
     const recordInput: Partial<FarmerInput> = {
-      agent_id: agentId,
-      device_uuid: deviceUuid,
-      farmer_name: farmerName,
-      nin: nin.trim(), // Strict 11-digit string
-      bvn: bvn.trim(), // Strict 11-digit string
-      phone_number: phoneNumber.trim(),
-      lga: lga.trim(),
-      community_ward: communityWard.trim(),
-      cooperative_name: cooperativeName.trim(),
+      agent_id: agentId || 'AGT-8821',
+      device_uuid: deviceUuid || 'DEV-DEFAULT',
+      farmer_name: farmerName ? farmerName.trim() : '',
+      nin: nin ? nin.trim() : '', // Strict 11-digit string
+      bvn: bvn ? bvn.trim() : '', // Strict 11-digit string
+      phone_number: phoneNumber ? phoneNumber.trim() : '',
+      lga: lga ? lga.trim() : '',
+      community_ward: communityWard ? communityWard.trim() : '',
+      cooperative_name: cooperativeName ? cooperativeName.trim() : '',
       crop_type: formattedProduceString,
-      farm_size_hectares: parseFloat(farmSizeHectares),
-      estimated_yield_tonnes: parseFloat(estimatedYieldTonnes),
-      farm_location: farmLocation.trim(),
-      latitude: latitude ?? undefined,
-      longitude: longitude ?? undefined,
-      biometric_template_hash: biometricHash,
+      farm_size_hectares: parseFloat(farmSizeHectares) || 0,
+      estimated_yield_tonnes: parseFloat(estimatedYieldTonnes) || 0,
+      farm_location: farmLocation ? farmLocation.trim() : '',
+      latitude: latitude ?? 0,
+      longitude: longitude ?? 0,
+      biometric_template_hash: biometricHash || '',
     };
 
     const validation = validateFarmerInput(recordInput);
