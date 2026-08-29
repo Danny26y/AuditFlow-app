@@ -1,26 +1,72 @@
 import os
 import re
+import urllib.parse
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text, inspect
+from sqlalchemy.engine import make_url
 from sqlalchemy.orm import sessionmaker
 from model import Base, FarmerRegistry
 
 # ------------------------------------------------------------------------------
-# Load Environment Variables from backend/.env
+# Load Environment Variables from backend/.env and Root
 # ------------------------------------------------------------------------------
 BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.dirname(BACKEND_DIR)
+
+# Priority 1: backend/.env
 ENV_FILE = os.path.join(BACKEND_DIR, ".env")
 if os.path.exists(ENV_FILE):
     load_dotenv(dotenv_path=ENV_FILE, override=True)
-else:
-    load_dotenv(override=True)
+
+# Priority 2: Root .env (if present)
+ROOT_ENV_FILE = os.path.join(ROOT_DIR, ".env")
+if os.path.exists(ROOT_ENV_FILE):
+    load_dotenv(dotenv_path=ROOT_ENV_FILE, override=False)
+
+# Priority 3: System Environment Variables
+load_dotenv(override=False)
+
+
+def safe_encode_database_url(url: str) -> str:
+    """
+    Safely cleans and encodes special characters (like #, ?, @, *) in database passwords
+    so that SQLAlchemy's make_url() parser does not fail with ArgumentError.
+    """
+    if not url:
+        return ""
+
+    url = url.strip().strip('"').strip("'")
+    if url.startswith("postgres://"):
+        url = "postgresql://" + url[len("postgres://"):]
+
+    # Check if standard SQLAlchemy parser can already parse it
+    try:
+        make_url(url)
+        return url
+    except Exception:
+        pass
+
+    # Extract components: dialect://username:password@hostname:port/database?params
+    # We use regex to isolate the password and URL-encode special characters (like '#')
+    pattern = r"^([a-zA-Z0-9_+]+)://([^:]+):(.*)@([^/@:]+)(?::(\d+))?(/[^?#]+)?(?:\?(.*))?$"
+    match = re.match(pattern, url)
+    if match:
+        dialect, user, raw_pass, host, port, db_path, query_params = match.groups()
+        encoded_user = urllib.parse.quote(user, safe="")
+        encoded_pass = urllib.parse.quote(raw_pass, safe="")
+        port_str = f":{port}" if port else ""
+        db_str = db_path if db_path else "/postgres"
+        query_str = f"?{query_params}" if query_params else ""
+        return f"{dialect}://{encoded_user}:{encoded_pass}@{host}{port_str}{db_str}{query_str}"
+
+    return url
 
 
 def resolve_database_url() -> str:
     """
     Resolves the active database connection URL in priority order:
     1. DATABASE_URL / SUPABASE_DB_URL / SUPABASE_DATABASE_URL / POSTGRES_URL / POSTGRESQL_URL
-    2. Discrete parameters (POSTGRES_HOST/SUPABASE_DB_HOST, user, password, port, db)
+    2. Discrete parameters (POSTGRES_HOST / SUPABASE_DB_HOST / host, user, password, port, db)
     3. Fallback to local SQLite database for offline dev and testing.
     """
     raw_url = (
@@ -32,24 +78,22 @@ def resolve_database_url() -> str:
     )
 
     if raw_url and raw_url.strip():
-        url = raw_url.strip()
-        # Normalize deprecated postgres:// prefix to postgresql:// for SQLAlchemy 2.0+
-        if url.startswith("postgres://"):
-            url = "postgresql://" + url[len("postgres://"):]
-        return url
+        return safe_encode_database_url(raw_url)
 
-    # Check discrete PostgreSQL / Supabase variables
-    db_host = os.getenv("POSTGRES_HOST") or os.getenv("SUPABASE_DB_HOST")
-    db_user = os.getenv("POSTGRES_USER") or os.getenv("SUPABASE_DB_USER") or "postgres"
-    db_password = os.getenv("POSTGRES_PASSWORD") or os.getenv("SUPABASE_DB_PASSWORD")
-    db_port = os.getenv("POSTGRES_PORT") or os.getenv("SUPABASE_DB_PORT") or "5432"
-    db_name = os.getenv("POSTGRES_DB") or os.getenv("SUPABASE_DB_NAME") or "postgres"
+    # Check discrete PostgreSQL / Supabase variables (both uppercase and lowercase)
+    db_host = os.getenv("POSTGRES_HOST") or os.getenv("SUPABASE_DB_HOST") or os.getenv("host")
+    db_user = os.getenv("POSTGRES_USER") or os.getenv("SUPABASE_DB_USER") or os.getenv("user") or "postgres"
+    db_password = os.getenv("POSTGRES_PASSWORD") or os.getenv("SUPABASE_DB_PASSWORD") or os.getenv("password")
+    db_port = os.getenv("POSTGRES_PORT") or os.getenv("SUPABASE_DB_PORT") or os.getenv("port") or "5432"
+    db_name = os.getenv("POSTGRES_DB") or os.getenv("SUPABASE_DB_NAME") or os.getenv("database") or "postgres"
 
     if db_host and db_password:
-        return f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}?sslmode=require"
+        encoded_user = urllib.parse.quote(db_user, safe="")
+        encoded_pass = urllib.parse.quote(db_password, safe="")
+        return f"postgresql://{encoded_user}:{encoded_pass}@{db_host}:{db_port}/{db_name}?sslmode=require"
 
     # Default fallback: Local SQLite database
-    default_sqlite_path = os.path.join(BACKEND_DIR, "field_registry_master.db")
+    default_sqlite_path = os.path.join(BACKEND_DIR, "field_registry_master.db").replace("\\", "/")
     return f"sqlite:///{default_sqlite_path}"
 
 
