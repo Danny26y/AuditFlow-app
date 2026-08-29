@@ -6,11 +6,10 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
-  Switch,
   Alert,
   Platform,
 } from 'react-native';
-import { bluetoothService } from '../services/bluetooth';
+import { bluetoothService, ESP32_SERVICE_UUID_UPPER } from '../services/bluetooth';
 import { BluetoothConnectionState, BluetoothDevice, BiometricScanResult } from '../types';
 
 export default function BluetoothScannerModal() {
@@ -20,18 +19,20 @@ export default function BluetoothScannerModal() {
   const [connectedDevice, setConnectedDevice] = useState<BluetoothDevice | null>(
     bluetoothService.getConnectedDevice()
   );
-  const [isMock, setIsMock] = useState<boolean>(bluetoothService.isMockMode());
   const [discoveredDevices, setDiscoveredDevices] = useState<BluetoothDevice[]>([]);
   const [isScanningDevices, setIsScanningDevices] = useState<boolean>(false);
   const [isTestingScan, setIsTestingScan] = useState<boolean>(false);
+  const [scanStatusMessage, setScanStatusMessage] = useState<string>('');
   const [lastScanResult, setLastScanResult] = useState<BiometricScanResult | null>(null);
 
   useEffect(() => {
     const unsubscribe = bluetoothService.addListener((state, data) => {
       setConnectionState(state);
       if (data?.device !== undefined) setConnectedDevice(data.device);
-      if (data?.isMock !== undefined) setIsMock(data.isMock);
+      if (data?.discovered) setDiscoveredDevices(data.discovered);
       if (data?.scanResult) setLastScanResult(data.scanResult);
+      if (data?.prompt) setScanStatusMessage(data.prompt);
+      else if (data?.status) setScanStatusMessage(data.status);
     });
 
     return () => {
@@ -39,16 +40,18 @@ export default function BluetoothScannerModal() {
     };
   }, []);
 
-  const handleToggleMock = (val: boolean) => {
-    setIsMock(val);
-    bluetoothService.setMockMode(val);
-  };
-
   const handleScanForDevices = async () => {
     setIsScanningDevices(true);
+    setDiscoveredDevices([]);
     try {
       const devices = await bluetoothService.scanForDevices();
       setDiscoveredDevices(devices);
+      if (devices.length === 0) {
+        Alert.alert(
+          'No Scanners Found',
+          'Ensure your ESP32 fingerprint scanner is powered on (blue LED standby) and nearby.'
+        );
+      }
     } catch (err: any) {
       Alert.alert('Scan Failed', err?.message || 'Could not scan for Bluetooth devices.');
     } finally {
@@ -61,7 +64,7 @@ export default function BluetoothScannerModal() {
       const success = await bluetoothService.connect(device.id);
       if (success) {
         setConnectedDevice(device);
-        Alert.alert('Connected', `Paired with ${device.name}`);
+        Alert.alert('Connected', `Paired successfully with ${device.name}`);
       }
     } catch (err: any) {
       Alert.alert('Pairing Error', err?.message || 'Could not connect to device.');
@@ -72,15 +75,24 @@ export default function BluetoothScannerModal() {
     await bluetoothService.disconnect();
     setConnectedDevice(null);
     setLastScanResult(null);
+    setScanStatusMessage('');
   };
 
   const handleTestFingerprintScan = async () => {
+    if (connectionState !== 'CONNECTED') {
+      Alert.alert('Scanner Not Paired', 'Please scan for and connect your ESP32 scanner first.');
+      return;
+    }
+
     setIsTestingScan(true);
+    setScanStatusMessage('Please place finger on ESP32 optical sensor...');
     try {
       const res = await bluetoothService.triggerBiometricScan();
       setLastScanResult(res);
+      setScanStatusMessage('Fingerprint template extracted successfully!');
     } catch (err: any) {
       Alert.alert('Biometric Scan Error', err?.message || 'Scan failed.');
+      setScanStatusMessage('');
     } finally {
       setIsTestingScan(false);
     }
@@ -91,12 +103,14 @@ export default function BluetoothScannerModal() {
       {/* Header Card */}
       <View style={styles.headerCard}>
         <View style={styles.headerTop}>
-          <Text style={styles.headerTitle}>ESP32 Bluetooth Scanner</Text>
+          <Text style={styles.headerTitle}>ESP32 Biometric Scanner</Text>
           <View
             style={[
               styles.stateBadge,
               connectionState === 'CONNECTED'
                 ? styles.stateBadgeConnected
+                : connectionState === 'SCANNING_FINGER'
+                ? styles.stateBadgeScanning
                 : styles.stateBadgeDisconnected,
             ]}
           >
@@ -104,36 +118,37 @@ export default function BluetoothScannerModal() {
           </View>
         </View>
         <Text style={styles.headerSubtitle}>
-          Fingerprint sensor pairing & biometric template extraction engine
+          Physical BLE hardware pairing & JM101B fingerprint template extraction engine
         </Text>
       </View>
 
-      {/* Hardware Simulation Mode Toggle */}
-      <View style={styles.card}>
-        <View style={styles.toggleRow}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.cardTitle}>Hardware Simulation (Mock Mode)</Text>
-            <Text style={styles.cardSubtext}>
-              Generates simulated 64-char SHA-256 fingerprint templates with realistic optical sensor delays
-            </Text>
-          </View>
-          <Switch
-            value={isMock}
-            onValueChange={handleToggleMock}
-            trackColor={{ false: '#94A3B8', true: '#10B981' }}
-          />
+      {/* Hardware Spec Info Card */}
+      <View style={styles.specCard}>
+        <Text style={styles.specTitle}>Hardware Configuration</Text>
+        <View style={styles.specRow}>
+          <Text style={styles.specLabel}>Service UUID:</Text>
+          <Text style={styles.specValue}>{ESP32_SERVICE_UUID_UPPER}</Text>
+        </View>
+        <View style={styles.specRow}>
+          <Text style={styles.specLabel}>Device Fleet Prefix:</Text>
+          <Text style={styles.specValue}>AuditFlow_Scanner_XXXX</Text>
+        </View>
+        <View style={styles.specRow}>
+          <Text style={styles.specLabel}>Protocol:</Text>
+          <Text style={styles.specValue}>GATT SOF ➔ 512B Chunks ➔ EOF (SHA-256)</Text>
         </View>
       </View>
 
       {/* Active Connection Card */}
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Active Paired Scanner</Text>
+        <Text style={styles.cardTitle}>Paired Scanner Status</Text>
 
         {connectedDevice ? (
           <View style={styles.connectedBox}>
-            <View>
+            <View style={{ flex: 1 }}>
               <Text style={styles.deviceName}>{connectedDevice.name}</Text>
-              <Text style={styles.deviceId}>ID: {connectedDevice.id} | RSSI: {connectedDevice.rssi ?? -60} dBm</Text>
+              <Text style={styles.deviceId}>ID: {connectedDevice.id}</Text>
+              <Text style={styles.rssiText}>Signal: {connectedDevice.rssi ?? -60} dBm (Active)</Text>
             </View>
             <TouchableOpacity style={styles.disconnectBtn} onPress={handleDisconnect}>
               <Text style={styles.disconnectBtnText}>Disconnect</Text>
@@ -141,14 +156,19 @@ export default function BluetoothScannerModal() {
           </View>
         ) : (
           <View style={styles.noDeviceBox}>
-            <Text style={styles.noDeviceText}>No ESP32 scanner currently paired.</Text>
+            <Text style={styles.noDeviceText}>
+              No physical ESP32 scanner currently paired. Tap below to scan nearby Bluetooth LE devices.
+            </Text>
             <TouchableOpacity
               style={styles.scanBtn}
               onPress={handleScanForDevices}
               disabled={isScanningDevices}
             >
               {isScanningDevices ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
+                <View style={styles.btnLoadingRow}>
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                  <Text style={styles.scanBtnText}>  Scanning for ESP32 Scanners...</Text>
+                </View>
               ) : (
                 <Text style={styles.scanBtnText}>🔍 Scan for Nearby Scanners</Text>
               )}
@@ -159,18 +179,22 @@ export default function BluetoothScannerModal() {
         {/* Discovered Devices List */}
         {discoveredDevices.length > 0 && !connectedDevice && (
           <View style={styles.deviceListContainer}>
-            <Text style={styles.deviceListHeader}>Discovered Devices:</Text>
+            <Text style={styles.deviceListHeader}>Discovered ESP32 Units ({discoveredDevices.length}):</Text>
             {discoveredDevices.map((d) => (
               <TouchableOpacity
                 key={d.id}
                 style={styles.deviceRow}
                 onPress={() => handleConnectDevice(d)}
               >
-                <View>
+                <View style={{ flex: 1 }}>
                   <Text style={styles.deviceRowName}>{d.name}</Text>
-                  <Text style={styles.deviceRowId}>{d.id} (Signal: {d.rssi} dBm)</Text>
+                  <Text style={styles.deviceRowId}>
+                    MAC/ID: {d.id} • Signal: {d.rssi} dBm
+                  </Text>
                 </View>
-                <Text style={styles.connectLink}>Pair ➔</Text>
+                <View style={styles.pairButton}>
+                  <Text style={styles.pairButtonText}>Pair ➔</Text>
+                </View>
               </TouchableOpacity>
             ))}
           </View>
@@ -180,28 +204,47 @@ export default function BluetoothScannerModal() {
       {/* Test Fingerprint Capture */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Test Biometric Acquisition</Text>
+        <Text style={styles.cardSubtext}>
+          Arms the JM101B sensor. When the farmer touches the optical glass, the ESP32 streams the 512-byte template.
+        </Text>
 
         <TouchableOpacity
-          style={[styles.testScanBtn, isTestingScan ? styles.testScanBtnActive : null]}
+          style={[
+            styles.testScanBtn,
+            connectionState === 'SCANNING_FINGER' ? styles.testScanBtnActive : null,
+            !connectedDevice ? styles.testScanBtnDisabled : null,
+          ]}
           onPress={handleTestFingerprintScan}
-          disabled={isTestingScan}
+          disabled={isTestingScan || !connectedDevice}
         >
           {isTestingScan ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
+            <View style={styles.btnLoadingRow}>
+              <ActivityIndicator size="small" color="#FFFFFF" />
+              <Text style={styles.testScanBtnText}>  Waiting for Finger Touch...</Text>
+            </View>
           ) : (
-            <Text style={styles.testScanBtnText}>👆 Trigger Biometric Sensor Scan</Text>
+            <Text style={styles.testScanBtnText}>
+              {connectedDevice ? '👆 Trigger Biometric Sensor Scan' : 'Pair Scanner to Test Acquisition'}
+            </Text>
           )}
         </TouchableOpacity>
+
+        {scanStatusMessage ? (
+          <View style={styles.statusMessageBox}>
+            <Text style={styles.statusMessageText}>{scanStatusMessage}</Text>
+          </View>
+        ) : null}
 
         {lastScanResult && (
           <View style={styles.scanResultBox}>
             <View style={styles.scanResultHeader}>
-              <Text style={styles.scanResultTitle}>Template Successfully Extracted</Text>
+              <Text style={styles.scanResultTitle}>✓ Hardware Template Extracted</Text>
               <Text style={styles.qualityTag}>Score: {lastScanResult.qualityScore}%</Text>
             </View>
             <Text style={styles.templateCodeLabel}>SHA-256 Biometric Hash:</Text>
             <Text style={styles.templateCode}>{lastScanResult.templateHash}</Text>
             <Text style={styles.rawPreviewText}>{lastScanResult.rawBytesPreview}</Text>
+            <Text style={styles.timestampText}>Captured At: {lastScanResult.timestamp}</Text>
           </View>
         )}
       </View>
@@ -224,7 +267,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderWidth: 2,
     borderColor: '#334155',
-    marginBottom: 16,
+    marginBottom: 14,
   },
   headerTop: {
     flexDirection: 'row',
@@ -246,6 +289,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#10B981',
   },
+  stateBadgeScanning: {
+    backgroundColor: '#92400E',
+    borderWidth: 1,
+    borderColor: '#F59E0B',
+  },
   stateBadgeDisconnected: {
     backgroundColor: '#334155',
   },
@@ -259,6 +307,37 @@ const styles = StyleSheet.create({
     color: '#94A3B8',
     marginTop: 4,
     fontWeight: '500',
+  },
+  specCard: {
+    backgroundColor: '#0B1329',
+    borderRadius: 10,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#1E293B',
+    marginBottom: 14,
+  },
+  specTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#38BDF8',
+    textTransform: 'uppercase',
+    marginBottom: 6,
+  },
+  specRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginVertical: 2,
+  },
+  specLabel: {
+    fontSize: 11,
+    color: '#94A3B8',
+    fontWeight: '600',
+  },
+  specValue: {
+    fontSize: 11,
+    color: '#F1F5F9',
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    fontWeight: '700',
   },
   card: {
     backgroundColor: '#FFFFFF',
@@ -277,11 +356,7 @@ const styles = StyleSheet.create({
   cardSubtext: {
     fontSize: 12,
     color: '#64748B',
-  },
-  toggleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    marginBottom: 10,
   },
   connectedBox: {
     flexDirection: 'row',
@@ -304,16 +379,22 @@ const styles = StyleSheet.create({
     color: '#166534',
     marginTop: 2,
   },
+  rssiText: {
+    fontSize: 11,
+    color: '#047857',
+    fontWeight: '700',
+    marginTop: 2,
+  },
   disconnectBtn: {
     backgroundColor: '#DC2626',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderRadius: 6,
   },
   disconnectBtnText: {
     color: '#FFFFFF',
     fontWeight: '800',
-    fontSize: 11,
+    fontSize: 12,
   },
   noDeviceBox: {
     marginTop: 8,
@@ -321,14 +402,20 @@ const styles = StyleSheet.create({
   noDeviceText: {
     fontSize: 13,
     color: '#64748B',
-    marginBottom: 10,
+    marginBottom: 12,
+    lineHeight: 18,
   },
   scanBtn: {
-    height: 46,
+    height: 48,
     backgroundColor: '#2563EB',
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  btnLoadingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   scanBtnText: {
     color: '#FFFFFF',
@@ -352,23 +439,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
   },
   deviceRowName: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '800',
     color: '#0F172A',
   },
   deviceRowId: {
     fontSize: 11,
     color: '#64748B',
+    marginTop: 2,
   },
-  connectLink: {
+  pairButton: {
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#3B82F6',
+  },
+  pairButtonText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#2563EB',
+    color: '#1D4ED8',
   },
   testScanBtn: {
     height: 50,
@@ -376,18 +472,35 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: 6,
   },
   testScanBtnActive: {
     backgroundColor: '#D97706',
+  },
+  testScanBtnDisabled: {
+    backgroundColor: '#94A3B8',
   },
   testScanBtnText: {
     color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '900',
   },
+  statusMessageBox: {
+    marginTop: 10,
+    padding: 10,
+    backgroundColor: '#FEF3C7',
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+  },
+  statusMessageText: {
+    fontSize: 12,
+    color: '#92400E',
+    fontWeight: '700',
+    textAlign: 'center',
+  },
   scanResultBox: {
-    marginTop: 12,
+    marginTop: 14,
     backgroundColor: '#F0FDFA',
     borderWidth: 1.5,
     borderColor: '#0D9488',
@@ -401,7 +514,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   scanResultTitle: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '800',
     color: '#0F766E',
   },
@@ -434,5 +547,10 @@ const styles = StyleSheet.create({
     color: '#64748B',
     marginTop: 6,
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+  },
+  timestampText: {
+    fontSize: 10,
+    color: '#94A3B8',
+    marginTop: 4,
   },
 });

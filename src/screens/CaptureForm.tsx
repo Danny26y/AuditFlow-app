@@ -105,7 +105,8 @@ export default function CaptureForm({ onRecordSaved }: CaptureFormProps) {
   const [isLoadingGps, setIsLoadingGps] = useState<boolean>(false);
   const [isScanningBio, setIsScanningBio] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [isMockBluetooth, setIsMockBluetooth] = useState<boolean>(true);
+  const [pairedScanner, setPairedScanner] = useState<any>(bluetoothService.getConnectedDevice());
+  const [bleConnectionState, setBleConnectionState] = useState<string>(bluetoothService.getConnectionState());
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [successBanner, setSuccessBanner] = useState<string | null>(null);
   const [highContrastMode, setHighContrastMode] = useState<boolean>(true);
@@ -115,8 +116,6 @@ export default function CaptureForm({ onRecordSaved }: CaptureFormProps) {
 
   // Initialize Persistent Device Identity, Bluetooth state and GPS
   useEffect(() => {
-    setIsMockBluetooth(bluetoothService.isMockMode());
-
     // Auto-detect hardware & persistent device UUID
     async function initDevice() {
       try {
@@ -131,6 +130,10 @@ export default function CaptureForm({ onRecordSaved }: CaptureFormProps) {
     initDevice();
 
     const unsubscribeBio = bluetoothService.addListener((state, data) => {
+      setBleConnectionState(state);
+      if (data?.device !== undefined) {
+        setPairedScanner(data.device);
+      }
       if (state === 'SCANNING_FINGER') {
         setIsScanningBio(true);
       } else {
@@ -147,14 +150,6 @@ export default function CaptureForm({ onRecordSaved }: CaptureFormProps) {
       unsubscribeBio();
     };
   }, []);
-
-  /**
-   * Toggles Hardware Mock mode for testing without a physical ESP32 scanner
-   */
-  const handleToggleMockBluetooth = (value: boolean) => {
-    setIsMockBluetooth(value);
-    bluetoothService.setMockMode(value);
-  };
 
   /**
    * Toggles a crop or livestock item in/out of the selected multi-selection array
@@ -1102,12 +1097,9 @@ export default function CaptureForm({ onRecordSaved }: CaptureFormProps) {
         <View style={styles.cardHeaderRow}>
           <Text style={[styles.cardHeader, { marginBottom: 0, flexShrink: 1 }]}>6. ESP32 Biometrics</Text>
           <View style={styles.mockToggleContainer}>
-            <Text style={styles.mockToggleLabel}>Hardware Mock</Text>
-            <Switch
-              value={isMockBluetooth}
-              onValueChange={handleToggleMockBluetooth}
-              trackColor={{ false: '#767577', true: '#2E7D32' }}
-            />
+            <Text style={[styles.mockToggleLabel, { color: pairedScanner ? '#059669' : '#64748B', fontWeight: '800' }]}>
+              {pairedScanner ? `🟢 ${pairedScanner.name}` : '⚪ ESP32 Disconnected'}
+            </Text>
           </View>
         </View>
 
@@ -1142,7 +1134,9 @@ export default function CaptureForm({ onRecordSaved }: CaptureFormProps) {
           </View>
         ) : (
           <Text style={styles.bioPromptText}>
-            Pair with ESP32 Bluetooth scanner or enable Hardware Mock to capture biometric template.
+            {pairedScanner
+              ? 'Tap Capture Fingerprint and place the farmer’s finger on the ESP32 optical sensor glass.'
+              : 'Please pair an ESP32 Bluetooth scanner in the Bluetooth tab to capture biometric templates.'}
           </Text>
         )}
         {errors.biometric_template_hash && (

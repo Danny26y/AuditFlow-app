@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: auditflow-backend
+    runtime: python
+    rootDir: backend
+    plan: free
+    region: frankfurt # or oregon, ohio, singapore
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false # Set securely in Render Dashboard (Supabase PostgreSQL URL)
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: ENVIRONMENT
+        value: production
+      - key: DB_POOL_SIZE
+        value: 10
+      - key: DB_MAX_OVERFLOW
+        value: 20
+      - key: DB_POOL_RECYCLE
+        value: 1800

@@ -33,7 +33,17 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-sqlite"
+      "expo-sqlite",
+      [
+        "react-native-ble-plx",
+        {
+          "isBackgroundEnabled": false,
+          "modes": [
+            "central"
+          ],
+          "bluetoothAlwaysPermission": "Allow AuditFlow to connect to ESP32 biometric scanners over Bluetooth."
+        }
+      ]
     ],
     "extra": {
       "eas": {

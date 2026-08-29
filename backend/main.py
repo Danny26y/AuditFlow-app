@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from database import init_db
+from database import init_db, get_db_status
 from ingest import router as ingest_router, legacy_router as legacy_ingest_router
 from security_engine import router as security_router
 
@@ -29,9 +29,11 @@ app.include_router(security_router)
 
 @app.get("/health", tags=["System Health"])
 async def health_check():
+    db_health = get_db_status()
     return {
-        "status": "healthy",
+        "status": "healthy" if db_health.get("connected") else "degraded",
         "service": "AuditFlow Field Capture Backend",
+        "database": db_health,
         "endpoints": {
             "batch_ingest": "POST /api/v1/ingest/batch",
             "list_records": "GET /api/v1/ingest/records",
@@ -40,9 +42,17 @@ async def health_check():
             "stats_summary": "GET /api/v1/ingest/stats/summary",
             "upload_template": "POST /api/v1/ingest/upload-template",
             "security_reconcile": "POST /api/v1/security/reconcile-manifest",
+            "db_health": "GET /api/v1/health/db",
         },
     }
 
+@app.get("/api/v1/health/db", tags=["System Health"])
+async def db_health_check():
+    return get_db_status()
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    import os
+    port = int(os.getenv("PORT", 8000))
+    is_dev = os.getenv("ENVIRONMENT", "development").lower() == "development"
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=is_dev)
